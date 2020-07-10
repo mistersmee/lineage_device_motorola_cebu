@@ -155,6 +155,9 @@ private:
 
   size_t mBatchSize, mDesiredBatchSize;
   size_t mTripBatchSize, mDesiredTripBatchSize;
+  GnssSvMeasurementSet*  mSvMeasurementSet;
+  bool mIsFirstFinalFixReported;
+  bool mIsFirstStartFixReq;
 
   /* Convert event mask from loc eng to loc_api_v02 format */
   static locClientEventMaskType convertMask(LOC_API_ADAPTER_EVENT_MASK_T mask);
@@ -414,7 +417,7 @@ public:
     setTime(LocGpsUtcTime time, int64_t timeReference, int uncertainty);
 
   virtual void
-    injectPosition(double latitude, double longitude, float accuracy);
+    injectPosition(double latitude, double longitude, float accuracy, bool onDemandCpi);
 
   virtual void
     injectPosition(const Location& location, bool onDemandCpi);
@@ -444,7 +447,7 @@ public:
 
   virtual enum loc_api_adapter_err setNMEATypesSync(uint32_t typesMask);
 
-  virtual LocationError setLPPConfigSync(GnssConfigLppProfile profile);
+  virtual LocationError setLPPConfigSync(GnssConfigLppProfileMask profileMask);
 
 
   virtual enum loc_api_adapter_err
@@ -481,6 +484,10 @@ public:
                                     LocApiResponse *adapterResponse=nullptr);
   virtual void configMinGpsWeek(uint16_t minGpsWeek,
                                 LocApiResponse *adapterResponse=nullptr);
+  virtual LocationError setParameterSync(const GnssConfig & gnssConfig);
+
+  virtual void getParameter(uint32_t sessionId, GnssConfigFlagsMask flags,
+                            LocApiResponse* adapterResponse=nullptr);
   /*
   Returns
   Current value of GPS Lock on success
@@ -495,7 +502,6 @@ public:
   virtual LocPosTechMask convertPosTechMask(qmiLocPosTechMaskT_v02 mask);
   virtual LocNavSolutionMask convertNavSolutionMask(qmiLocNavSolutionMaskT_v02 mask);
   virtual GnssConfigSuplVersion convertSuplVersion(const uint32_t suplVersion);
-  virtual GnssConfigLppProfile convertLppProfile(const uint32_t lppProfile);
   virtual GnssConfigLppeControlPlaneMask convertLppeCp(const uint32_t lppeControlPlaneMask);
   virtual GnssConfigLppeUserPlaneMask convertLppeUp(const uint32_t lppeUserPlaneMask);
   virtual LocationError setEmergencyExtensionWindowSync(const uint32_t emergencyExtensionSeconds);
