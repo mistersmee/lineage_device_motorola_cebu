@@ -37,6 +37,7 @@
 #include <LocationIntegrationApi.h>
 #include <MsgTask.h>
 #include <LocationApiMsg.h>
+#include <LocationApiPbMsgConv.h>
 
 #ifdef NO_UNORDERED_SET_OR_MAP
     #include <map>
@@ -142,6 +143,9 @@ private:
     void processGetConstellationSecondaryBandConfigRespCb(
             const LocConfigGetConstellationSecondaryBandConfigRespMsg* pRespMsg);
 
+    // protobuf conversion util class
+    LocationApiPbMsgConv mPbufMsgConv;
+
     // internal session parameter
     static mutex             mMutex;
     static bool              mClientRunning; // allow singleton int client
@@ -167,7 +171,7 @@ private:
     LocIpc                   mIpc;
     shared_ptr<LocIpcSender> mIpcSender;
 
-    MsgTask*                 mMsgTask;
+    MsgTask                  mMsgTask;
 };
 
 } // namespace location_client

@@ -81,24 +81,17 @@ class MaintTimer : public LocTimer {
 public:
     MaintTimer(LocationApiService* locationApiService) :
             mLocationApiService(locationApiService),
-            mMsgTask(new MsgTask("LocHalDaemonMaintenanceMsgTask", false)) {
-        if (!mMsgTask) {
-            LOC_LOGe("failed to create msg task");
-        }
+            mMsgTask("LocHalDaemonMaintenanceMsgTask") {
     };
 
-    ~MaintTimer() {
-        if (mMsgTask) {
-            mMsgTask->destroy();
-        }
-    }
+    ~MaintTimer()  = default;
 
 public:
     void timeOutCallback() override;
 
 private:
     LocationApiService* mLocationApiService;
-    MsgTask*            mMsgTask;
+    MsgTask             mMsgTask;
 };
 
 class LocationApiService
@@ -137,6 +130,9 @@ public:
     // other APIs
     void deleteClientbyName(const std::string name);
 
+    // protobuf conversion util class
+    LocationApiPbMsgConv mPbufMsgConv;
+
     static std::mutex mMutex;
 
     // Utility routine used by maintenance timer
@@ -171,10 +167,15 @@ private:
     void pingTest(LocAPIPingTestReqMsg*);
 
     inline uint32_t gnssUpdateConfig(const GnssConfig& config) {
-        uint32_t* sessioIds =  mLocationControlApi->gnssUpdateConfig(config);
+        uint32_t* sessionIds =  mLocationControlApi->gnssUpdateConfig(config);
         // in our usage, we only configure one setting at a time,
         // so we have only one sessionId
-        return *sessioIds;
+        uint32_t sessionId = 0;
+        if (sessionIds) {
+            sessionId = *sessionIds;
+            delete [] sessionIds;
+        }
+        return sessionId;
     }
 
     // Location control API callback
