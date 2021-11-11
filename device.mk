@@ -315,12 +315,12 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_BOOT_JARS += \
     ims-moto-libs \
-    moto-ims-ext \
-    moto-telephony
+    qcom-moto-ims-ext \
+    qcom-moto-telephony-ext
 
 PRODUCT_SYSTEM_SERVER_JARS += \
-    moto-ims-ext \
-    moto-telephony
+    qcom-moto-ims-ext \
+    qcom-moto-telephony-ext
 
 # IPACM
 PRODUCT_PACKAGES += \
