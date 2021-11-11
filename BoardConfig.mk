@@ -67,6 +67,7 @@ BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 TARGET_KERNEL_ARCH := arm64
 TARGET_KERNEL_SOURCE := kernel/motorola/cebu
 TARGET_KERNEL_CLANG_COMPILE := true
+TARGET_KERNEL_DEFCONFIG := cebu_defconfig
 
 # Kernel modules - Audio
 TARGET_MODULE_ALIASES += \
