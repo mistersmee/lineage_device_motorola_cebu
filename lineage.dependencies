@@ -1,0 +1,11 @@
+[
+  {
+    "repository": "android_hardware_qcom_bootctrl",
+    "target_path": "hardware/qcom-caf/bootctrl",
+    "revision": "lineage-18.1-caf"
+  },
+  {
+    "repository": "android_hardware_motorola",
+    "target_path": "hardware/motorola"
+  }
+]
