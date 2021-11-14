@@ -3,7 +3,6 @@ AM_CFLAGS = \
     -I./ \
     $(LOCCORE_CFLAGS) \
     $(GPSUTILS_CFLAGS) \
-    $(LOCAPIMSGPROTO_CFLAGS) \
      -std=c++11
 
 if USE_SYSTEMD
@@ -18,11 +17,10 @@ endif
 
 requiredlibs = \
     $(LOCATIONAPI_LIBS) \
-    $(GPSUTILS_LIBS) \
-    $(LOCAPIMSGPROTO_LIBS) \
-    -lprotobuf
+    $(GPSUTILS_LIBS)
 
 h_sources = \
+    LocationApiMsg.h \
     LocHalDaemonClientHandler.h \
     LocationApiService.h
 

@@ -35,7 +35,6 @@
 #include <loc_api_v02_client.h>
 #include <vector>
 #include <functional>
-#include <unordered_map>
 
 #define LOC_SEND_SYNC_REQ(NAME, ID, REQ)  \
     int rv = true; \
@@ -156,14 +155,9 @@ private:
 
   size_t mBatchSize, mDesiredBatchSize;
   size_t mTripBatchSize, mDesiredTripBatchSize;
+  GnssSvMeasurementSet*  mSvMeasurementSet;
   bool mIsFirstFinalFixReported;
   bool mIsFirstStartFixReq;
-  uint64_t mHlosQtimer1, mHlosQtimer2;
-  uint32_t mRefFCount;
-
-  // Below two member variables are for elapsedRealTime calculation
-  ElapsedRealtimeEstimator mMeasElapsedRealTimeCal;
-  ElapsedRealtimeEstimator mPositionElapsedRealTimeCal;
 
   /* Convert event mask from loc eng to loc_api_v02 format */
   static locClientEventMaskType convertMask(LOC_API_ADAPTER_EVENT_MASK_T mask);
@@ -254,8 +248,6 @@ private:
   void populateCommonEphemeris(const qmiLocEphGnssDataStructT_v02 &, GnssEphCommon &);
   void populateGpsTimeOfReport(const qmiLocGnssTimeStructT_v02 &, GnssSystemTimeStructType &);
 
-  void populateFeatureStatusReport(const qmiLocFeaturesStatusMaskT_v02 &featureStatusReport,
-        std::unordered_map<LocationQwesFeatureType, bool> &featureMap);
   void reportLocEvent(const qmiLocEventReportIndMsgT_v02 *event_report_ptr);
   /* convert system info to location api format and dispatch to
      the registered adapter */
@@ -351,7 +343,6 @@ private:
   void geofenceBreachEvent(const qmiLocEventGeofenceBatchedBreachIndMsgT_v02* batchedBreachInfo);
   void geofenceStatusEvent(const qmiLocEventGeofenceGenAlertIndMsgT_v02* alertInfo);
   void geofenceDwellEvent(const qmiLocEventGeofenceBatchedDwellIndMsgT_v02 *dwellEvent);
-  void reportLatencyInfo(const qmiLocLatencyInformationIndMsgT_v02* pLocLatencyInfo);
 
 protected:
   virtual enum loc_api_adapter_err

@@ -1151,9 +1151,6 @@ typedef union
    /** Sent by the engine to notify client about query reqest
    QMI_LOC_EVENT_QUERY_XTRA_INFO_REQ_IND_V02 */
 
-   const qmiLocLatencyInformationIndMsgT_v02 *pLocLatencyInfoIndMsg;
-   /** Sent by the engine to inform of latency info
-    QMI_LOC_LATENCY_INFORMATION_IND_V02 */
 }locClientEventIndUnionType;
 
 

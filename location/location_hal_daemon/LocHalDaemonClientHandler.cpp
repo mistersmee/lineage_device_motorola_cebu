@@ -357,17 +357,13 @@ void LocHalDaemonClientHandler::resumeGeofences(size_t count, uint32_t* ids) {
 void LocHalDaemonClientHandler::pingTest() {
 
     if (nullptr != mIpcSender) {
-        string pbStr;
-        LocAPIPingTestIndMsg msg(SERVICE_NAME, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIPingTestIndMsg serializeToProtobuf failed");
+        LocAPIPingTestIndMsg msg(SERVICE_NAME);
+        bool rc = sendMessage(msg);
+
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -412,52 +408,55 @@ void LocHalDaemonClientHandler::onResponseCb(LocationError err, uint32_t id) {
         }
 
         bool rc = false;
-        ELocMsgID eLocMsgId = E_LOCAPI_UNDEFINED_MSG_ID;
-        string pbStr;
-        eLocMsgId = pendingMsgId;
         // send corresponding indication message if pending
         switch (pendingMsgId) {
             case E_LOCAPI_START_TRACKING_MSG_ID: {
                 LOC_LOGd("<-- start resp err=%u id=%u pending=%u", err, id, pendingMsgId);
+                LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_START_TRACKING_MSG_ID, err);
+                rc = sendMessage(msg);
                 break;
             }
-            case E_LOCAPI_STOP_TRACKING_MSG_ID: {
-                LOC_LOGd("<-- stop resp err=%u id=%u pending=%u", err, id, pendingMsgId);
-                break;
-            }
-            case E_LOCAPI_UPDATE_TRACKING_OPTIONS_MSG_ID: {
-                LOC_LOGd("<-- update resp err=%u id=%u pending=%u", err, id, pendingMsgId);
-                break;
-            }
-            case E_LOCAPI_START_BATCHING_MSG_ID : {
-                LOC_LOGd("<-- start batching resp err=%u id=%u pending=%u", err, id, pendingMsgId);
-                break;
-            }
-            case E_LOCAPI_STOP_BATCHING_MSG_ID: {
-                LOC_LOGd("<-- stop batching resp err=%u id=%u pending=%u", err, id, pendingMsgId);
-                break;
-            }
-            case E_LOCAPI_UPDATE_BATCHING_OPTIONS_MSG_ID: {
-                LOC_LOGd("<-- update batching options resp err=%u id=%u pending=%u", err, id,
-                        pendingMsgId);
-                break;
-            }
-            default: {
-                LOC_LOGe("no pending message for %s", mName.c_str());
-                return;
+        case E_LOCAPI_STOP_TRACKING_MSG_ID: {
+            LOC_LOGd("<-- stop resp err=%u id=%u pending=%u", err, id, pendingMsgId);
+            LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_STOP_TRACKING_MSG_ID, err);
+            rc = sendMessage(msg);
+            break;
+        }
+        case E_LOCAPI_UPDATE_TRACKING_OPTIONS_MSG_ID: {
+            LOC_LOGd("<-- update resp err=%u id=%u pending=%u", err, id, pendingMsgId);
+            LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_UPDATE_TRACKING_OPTIONS_MSG_ID, err);
+            rc = sendMessage(msg);
+            break;
+        }
+        case E_LOCAPI_START_BATCHING_MSG_ID : {
+            LOC_LOGd("<-- start batching resp err=%u id=%u pending=%u", err, id, pendingMsgId);
+            LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_START_BATCHING_MSG_ID , err);
+            rc = sendMessage(msg);
+            break;
+        }
+        case E_LOCAPI_STOP_BATCHING_MSG_ID: {
+            LOC_LOGd("<-- stop batching resp err=%u id=%u pending=%u", err, id, pendingMsgId);
+            LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_STOP_BATCHING_MSG_ID, err);
+            rc = sendMessage(msg);
+            break;
+        }
+        case E_LOCAPI_UPDATE_BATCHING_OPTIONS_MSG_ID: {
+            LOC_LOGd("<-- update batching options resp err=%u id=%u pending=%u", err, id,
+                    pendingMsgId);
+            LocAPIGenericRespMsg msg(SERVICE_NAME, E_LOCAPI_UPDATE_BATCHING_OPTIONS_MSG_ID, err);
+            rc = sendMessage(msg);
+            break;
+        }
+        default: {
+            LOC_LOGe("no pending message for %s", mName.c_str());
+            return;
             }
         }
 
-        LocAPIGenericRespMsg msg(SERVICE_NAME, eLocMsgId, err, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            rc = sendMessage(pbStr.c_str(), pbStr.size(), eLocMsgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIGenericRespMsg serializeToProtobuf failed");
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -492,6 +491,7 @@ void LocHalDaemonClientHandler::onCollectiveResponseCallback(
     pmsg->collectiveRes.size = msglen;
     pmsg->collectiveRes.count = count;
 
+    int rc = 0;
     uint32_t* clientIds = getClientIds(count, ids);
     if (nullptr == clientIds) {
         delete[] msg;
@@ -512,27 +512,32 @@ void LocHalDaemonClientHandler::onCollectiveResponseCallback(
         case E_LOCAPI_ADD_GEOFENCES_MSG_ID: {
             LOC_LOGd("<-- addGeofence resp pending=%u", pendingMsgId);
             pmsg->msgId = E_LOCAPI_ADD_GEOFENCES_MSG_ID;
+            rc = sendMessage(msg, msglen);
             break;
         }
         case E_LOCAPI_REMOVE_GEOFENCES_MSG_ID: {
             LOC_LOGd("<-- removeGeofence resp pending=%u", pendingMsgId);
             pmsg->msgId = E_LOCAPI_REMOVE_GEOFENCES_MSG_ID;
             eraseGeofenceIds(count, clientIds);
+            rc = sendMessage(msg, msglen);
             break;
         }
         case E_LOCAPI_MODIFY_GEOFENCES_MSG_ID: {
             LOC_LOGd("<-- modifyGeofence resp pending=%u", pendingMsgId);
             pmsg->msgId = E_LOCAPI_MODIFY_GEOFENCES_MSG_ID;
+            rc = sendMessage(msg, msglen);
             break;
         }
         case E_LOCAPI_PAUSE_GEOFENCES_MSG_ID: {
             LOC_LOGd("<-- pauseGeofence resp pending=%u", pendingMsgId);
             pmsg->msgId = E_LOCAPI_PAUSE_GEOFENCES_MSG_ID;
+            rc = sendMessage(msg, msglen);
             break;
         }
         case E_LOCAPI_RESUME_GEOFENCES_MSG_ID: {
             LOC_LOGd("<-- resumeGeofence resp pending=%u", pendingMsgId);
             pmsg->msgId = E_LOCAPI_RESUME_GEOFENCES_MSG_ID;
+            rc = sendMessage(msg, msglen);
             break;
         }
         default: {
@@ -542,18 +547,11 @@ void LocHalDaemonClientHandler::onCollectiveResponseCallback(
         }
     }
 
-    string pbStr;
-    if (pmsg->serializeToProtobuf(pbStr)) {
-        bool rc = sendMessage(pbStr.c_str(), pbStr.size(), pmsg->msgId);
-        // purge this client if failed
-        if (!rc) {
-            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-            mService->deleteClientbyName(mName);
-        }
-    } else {
-        LOC_LOGe("LocAPICollectiveRespMsg serializeToProtobuf failed");
+    // purge this client if failed
+    if (!rc) {
+        LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+        mService->deleteClientbyName(mName);
     }
-
     delete[] msg;
     free(clientIds);
 }
@@ -565,73 +563,52 @@ LocHalDaemonClientHandler - Location Control API response callback functions
 void LocHalDaemonClientHandler::onControlResponseCb(LocationError err, ELocMsgID msgId) {
     // no need to hold the lock, as lock is already held at the caller
     if (nullptr != mIpcSender) {
-        LOC_LOGi("--< onControlResponseCb err=%u msgId=%u", err, msgId);
-        string pbStr;
-        LocAPIGenericRespMsg msg(SERVICE_NAME, msgId, err, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIGenericRespMsg serializeToProtobuf failed");
+        LOC_LOGd("--< onControlResponseCb err=%u msgId=%u", err, msgId);
+        LocAPIGenericRespMsg msg(SERVICE_NAME, msgId, err);
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
-    }
-}
-
-void LocHalDaemonClientHandler::sendTerrestrialFix(LocationError error,
-                                                   const Location& location) {
-    LocAPIGetSingleTerrestrialPosRespMsg msg(SERVICE_NAME,
-            error, location,  &mService->mPbufMsgConv);
-
-    const char* msgStream = nullptr;
-    size_t msgLen = 0;
-    string pbStr;
-    if (msg.serializeToProtobuf(pbStr)) {
-        msgStream = pbStr.c_str();
-        msgLen = pbStr.size();
-        sendMessage(msgStream, msgLen, E_LOCAPI_GET_SINGLE_TERRESTRIAL_POS_RESP_MSG_ID);
     }
 }
 
 void LocHalDaemonClientHandler::onGnssConfigCb(ELocMsgID configMsgId,
                                                const GnssConfig & gnssConfig) {
-    string pbStr;
+    uint8_t* msg = nullptr;
+    size_t msgLen = 0;
 
     switch (configMsgId) {
     case E_INTAPI_GET_ROBUST_LOCATION_CONFIG_REQ_MSG_ID:
         if (gnssConfig.flags & GNSS_CONFIG_FLAGS_ROBUST_LOCATION_BIT) {
-            LocConfigGetRobustLocationConfigRespMsg msg(SERVICE_NAME,
-                    gnssConfig.robustLocationConfig,
-                    &mService->mPbufMsgConv);
-            msg.serializeToProtobuf(pbStr);
+            msg = (uint8_t*) new LocConfigGetRobustLocationConfigRespMsg(
+                    SERVICE_NAME, gnssConfig.robustLocationConfig);
+            msgLen = sizeof(LocConfigGetRobustLocationConfigRespMsg);
         }
         break;
     case E_INTAPI_GET_MIN_GPS_WEEK_REQ_MSG_ID:
         if (gnssConfig.flags & GNSS_CONFIG_FLAGS_MIN_GPS_WEEK_BIT) {
             LOC_LOGd("--< onGnssConfigCb, minGpsWeek = %d", gnssConfig.minGpsWeek);
-            LocConfigGetMinGpsWeekRespMsg msg(SERVICE_NAME, gnssConfig.minGpsWeek,
-                    &mService->mPbufMsgConv);
-            msg.serializeToProtobuf(pbStr);
+            msg = (uint8_t*) new LocConfigGetMinGpsWeekRespMsg(SERVICE_NAME, gnssConfig.minGpsWeek);
+            msgLen = sizeof(LocConfigGetMinGpsWeekRespMsg);
         }
         break;
     case E_INTAPI_GET_MIN_SV_ELEVATION_REQ_MSG_ID:
         if (gnssConfig.flags & GNSS_CONFIG_FLAGS_MIN_SV_ELEVATION_BIT) {
             LOC_LOGd("--< onGnssConfigCb, minSvElevation = %d", gnssConfig.minSvElevation);
-            LocConfigGetMinSvElevationRespMsg msg(SERVICE_NAME, gnssConfig.minSvElevation,
-                    &mService->mPbufMsgConv);
-            msg.serializeToProtobuf(pbStr);
+            msg = (uint8_t*) new LocConfigGetMinSvElevationRespMsg(SERVICE_NAME,
+                                                                   gnssConfig.minSvElevation);
+            msgLen = sizeof(LocConfigGetMinSvElevationRespMsg);
         }
         break;
 
     case E_INTAPI_GET_CONSTELLATION_SECONDARY_BAND_CONFIG_REQ_MSG_ID:
-        if (gnssConfig.flags & GNSS_CONFIG_FLAGS_CONSTELLATION_SECONDARY_BAND_BIT)
+        LOC_LOGd("--< onGnssConfigCb, valid flags 0x%x", gnssConfig.flags);
         {
-            LocConfigGetConstellationSecondaryBandConfigRespMsg msg(SERVICE_NAME,
-                    gnssConfig.secondaryBandConfig, &mService->mPbufMsgConv);
-            msg.serializeToProtobuf(pbStr);
+            msg = (uint8_t*) new LocConfigGetConstellationSecondaryBandConfigRespMsg(
+                   SERVICE_NAME, gnssConfig.secondaryBandConfig);
+            msgLen = sizeof(LocConfigGetConstellationSecondaryBandConfigRespMsg);
         }
         break;
 
@@ -639,15 +616,19 @@ void LocHalDaemonClientHandler::onGnssConfigCb(ELocMsgID configMsgId,
         break;
     }
 
-    if ((nullptr != mIpcSender) && (pbStr.size() != 0)) {
-        bool rc = sendMessage(pbStr.c_str(), pbStr.size(), configMsgId);
+    if ((nullptr != mIpcSender) && (nullptr != msg)) {
+        bool rc = sendMessage(msg, msgLen);
         // purge this client if failed
         if (!rc) {
             LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
             mService->deleteClientbyName(mName);
         }
-    } else {
-        LOC_LOGe("mIpcSender or msgStream is null!!");
+    }
+
+    // cleanup
+    if (nullptr != msg) {
+        delete msg;
+        msg = nullptr;
     }
 }
 
@@ -657,27 +638,21 @@ LocHalDaemonClientHandler - Location API callback functions
 void LocHalDaemonClientHandler::onCapabilitiesCallback(LocationCapabilitiesMask mask) {
 
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
-    LOC_LOGd("--< onCapabilitiesCallback=0x%" PRIx64, mask);
+    LOC_LOGd("--< onCapabilitiesCallback=0x%x", mask);
 
-    if ((nullptr != mIpcSender) && (mask != mCapabilityMask)) {
+    if (nullptr != mIpcSender) {
         // broadcast
-        string pbStr;
-        LocAPICapabilitiesIndMsg msg(SERVICE_NAME, mask, &mService->mPbufMsgConv);
-        LOC_LOGd("mask old=0x%" PRIx64" new=0x%" PRIx64, mCapabilityMask, mask);
-        mCapabilityMask = mask;
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
+        LocAPICapabilitiesIndMsg msg(SERVICE_NAME, mask);
+        if (mask != mCapabilityMask) {
+            LOC_LOGd("mask old=0x%x new=0x%x", mCapabilityMask, mask);
+            mCapabilityMask = mask;
+            bool rc = sendMessage(msg);
             // purge this client if failed
             if (!rc) {
                 LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
                 mService->deleteClientbyName(mName);
             }
-        } else {
-            LOC_LOGe("LocAPICapabilitiesIndMsg serializeToProtobuf failed");
         }
-    } else {
-        LOC_LOGe("mIpcSender is NULL or masks are same old=0x%" PRIx64" new=0x%" PRIx64,
-                mCapabilityMask, mask);
     }
 }
 
@@ -689,17 +664,12 @@ void LocHalDaemonClientHandler::onTrackingCb(Location location) {
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_DISTANCE_BASED_TRACKING_BIT)) {
         // broadcast
-        string pbStr;
-        LocAPILocationIndMsg msg(SERVICE_NAME, location, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPILocationIndMsg serializeToProtobuf failed");
+        LocAPILocationIndMsg msg(SERVICE_NAME, location);
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -730,16 +700,11 @@ void LocHalDaemonClientHandler::onBatchingCb(size_t count, Location* location,
         pmsg->batchNotification.status = BATCHING_STATUS_POSITION_AVAILABE;
         memcpy(&(pmsg->batchNotification.location[0]), location, count * sizeof(Location));
 
-        string pbStr;
-        if (pmsg->serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), E_LOCAPI_BATCHING_MSG_ID);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIBatchingIndMsg serializeToProtobuf failed");
+        bool rc = sendMessage(msg, msglen);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
 
         delete[] msg;
@@ -756,19 +721,13 @@ void LocHalDaemonClientHandler::onBatchingStatusCb(BatchingStatusInfo batchingSt
         // For trip batching, notify client to stop session when BATCHING_STATUS_TRIP_COMPLETED
         LocAPIBatchNotification batchNotif = {};
         batchNotif.status = BATCHING_STATUS_TRIP_COMPLETED;
-        string pbStr;
-        LocAPIBatchingIndMsg msg(SERVICE_NAME, batchNotif, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIBatchingIndMsg serializeToProtobuf failed");
+        LocAPIBatchingIndMsg msg(SERVICE_NAME, batchNotif);
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
-
     }
 }
 
@@ -805,16 +764,11 @@ void LocHalDaemonClientHandler::onGeofenceBreachCb(GeofenceBreachNotification gf
         pmsg->gfBreachNotification.type = parseClientGeofenceBreachType(gfBreachNotif.type);
         memcpy(&(pmsg->gfBreachNotification.id[0]), clientIds, sizeof(uint32_t)*gfBreachNotif.count);
 
-        string pbStr;
-        if (pmsg->serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), E_LOCAPI_GEOFENCE_BREACH_MSG_ID);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIGeofenceBreachIndMsg serializeToProtobuf failed");
+        bool rc = sendMessage(msg, msglen);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
 
         delete[] msg;
@@ -830,31 +784,17 @@ void LocHalDaemonClientHandler::onGnssLocationInfoCb(GnssLocationInfoNotificatio
     if ((nullptr != mIpcSender) && (mSubscriptionMask &
             (E_LOC_CB_GNSS_LOCATION_INFO_BIT | E_LOC_CB_SIMPLE_LOCATION_INFO_BIT))) {
         bool rc = false;
-        string pbStr;
         if (mSubscriptionMask & E_LOC_CB_GNSS_LOCATION_INFO_BIT) {
-            LocAPILocationInfoIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
-            if (msg.serializeToProtobuf(pbStr)) {
-                rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-                // purge this client if failed
-                if (!rc) {
-                    LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                    mService->deleteClientbyName(mName);
-                }
-            } else {
-                LOC_LOGe("LocAPILocationInfoIndMsg serializeToProtobuf failed");
-            }
+            LocAPILocationInfoIndMsg msg(SERVICE_NAME, notification);
+            rc = sendMessage(msg);
         } else {
-            LocAPILocationIndMsg msg(SERVICE_NAME, notification.location, &mService->mPbufMsgConv);
-            if (msg.serializeToProtobuf(pbStr)) {
-                rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-                // purge this client if failed
-                if (!rc) {
-                    LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                    mService->deleteClientbyName(mName);
-                }
-            } else {
-                LOC_LOGe("LocAPILocationIndMsg serializeToProtobuf failed");
-            }
+            LocAPILocationIndMsg msg(SERVICE_NAME, notification.location);
+            rc = sendMessage(msg);
+        }
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -882,27 +822,19 @@ void LocHalDaemonClientHandler::onEngLocationsInfoCb(
                 ((locPtr->locOutputEngType == LOC_OUTPUT_ENGINE_SPE) &&
                  (mOptions.locReqEngTypeMask & LOC_REQ_ENGINE_SPE_BIT)) ||
                 ((locPtr->locOutputEngType == LOC_OUTPUT_ENGINE_PPE) &&
-                 (mOptions.locReqEngTypeMask & LOC_REQ_ENGINE_PPE_BIT )) ||
-                ((locPtr->locOutputEngType == LOC_OUTPUT_ENGINE_VPE) &&
-                 (mOptions.locReqEngTypeMask & LOC_REQ_ENGINE_VPE_BIT))) {
+                 (mOptions.locReqEngTypeMask & LOC_REQ_ENGINE_PPE_BIT ))) {
                 engineLocationInfoNotification[reportCount++] = *locPtr;
             }
         }
 
         if (reportCount > 0 ) {
-            string pbStr;
             LocAPIEngineLocationsInfoIndMsg msg(SERVICE_NAME, reportCount,
-                                                engineLocationInfoNotification,
-                                                &mService->mPbufMsgConv);
-            if (msg.serializeToProtobuf(pbStr)) {
-                bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-                // purge this client if failed
-                if (!rc) {
-                    LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                    mService->deleteClientbyName(mName);
-                }
-            } else {
-                LOC_LOGe("LocAPIEngineLocationsInfoIndMsg serializeToProtobuf failed");
+                                                engineLocationInfoNotification);
+            bool rc = sendMessage((const uint8_t*)&msg, msg.getMsgSize());
+            // purge this client if failed
+            if (!rc) {
+                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+                mService->deleteClientbyName(mName);
             }
         }
     }
@@ -915,22 +847,19 @@ void LocHalDaemonClientHandler::onGnssNiCb(uint32_t id, GnssNiNotification gnssN
 }
 
 void LocHalDaemonClientHandler::onGnssSvCb(GnssSvNotification notification) {
+
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssSvCb");
+
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_GNSS_SV_BIT)) {
         // broadcast
-        string pbStr;
-        LocAPISatelliteVehicleIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPISatelliteVehicleIndMsg serializeToProtobuf failed");
+        LocAPISatelliteVehicleIndMsg msg(SERVICE_NAME, notification);
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -944,23 +873,31 @@ void LocHalDaemonClientHandler::onGnssNmeaCb(GnssNmeaNotification notification) 
                 notification.timestamp,
                 notification.length,
                 notification.nmea);
-        // serialize nmea string into ipc message payload
-        string nmeaStr(notification.nmea, notification.length);
-        LocAPINmeaIndMsg msg(SERVICE_NAME, &mService->mPbufMsgConv);
-        msg.gnssNmeaNotification.timestamp = notification.timestamp;
-        msg.gnssNmeaNotification.nmea = nmeaStr;
 
-        string pbStr;
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), E_LOCAPI_NMEA_MSG_ID);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPINmeaIndMsg serializeToProtobuf failed");
+        // serialize nmea string into ipc message payload
+        size_t msglen = sizeof(LocAPINmeaIndMsg) + notification.length;
+        uint8_t *msg = new (std::nothrow) uint8_t[msglen];
+        if (nullptr == msg) {
+            return;
         }
+        memset(msg, 0, msglen);
+        LocAPINmeaIndMsg *pmsg = reinterpret_cast<LocAPINmeaIndMsg*>(msg);
+        strlcpy(pmsg->mSocketName, SERVICE_NAME, MAX_SOCKET_PATHNAME_LENGTH);
+        pmsg->msgId = E_LOCAPI_NMEA_MSG_ID;
+        pmsg->msgVersion = LOCATION_REMOTE_API_MSG_VERSION;
+        pmsg->gnssNmeaNotification.size = msglen;
+        pmsg->gnssNmeaNotification.timestamp = notification.timestamp;
+        pmsg->gnssNmeaNotification.length = notification.length;
+        memcpy(&(pmsg->gnssNmeaNotification.nmea[0]), notification.nmea, notification.length);
+
+        bool rc = sendMessage(msg, msglen);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
+        }
+
+        delete[] msg;
     }
 }
 
@@ -982,38 +919,30 @@ void LocHalDaemonClientHandler::onGnssDataCb(GnssDataNotification notification) 
             }
         }
 
-        string pbStr;
-        LocAPIDataIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            LOC_LOGv("Sending data message");
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIDataIndMsg serializeToProtobuf failed");
+        LocAPIDataIndMsg msg(SERVICE_NAME, notification);
+        LOC_LOGv("Sending data message");
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
 
 void LocHalDaemonClientHandler::onGnssMeasurementsCb(GnssMeasurementsNotification notification) {
+
     std::lock_guard<std::mutex> lock(LocationApiService::mMutex);
     LOC_LOGd("--< onGnssMeasurementsCb");
+
     if ((nullptr != mIpcSender) && (mSubscriptionMask & E_LOC_CB_GNSS_MEAS_BIT)) {
-        string pbStr;
-        LocAPIMeasIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
-        if (msg.serializeToProtobuf(pbStr)) {
-            LOC_LOGv("Sending meas message");
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIMeasIndMsg serializeToProtobuf failed");
+        LocAPIMeasIndMsg msg(SERVICE_NAME, notification);
+        LOC_LOGv("Sending meas message");
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -1025,18 +954,14 @@ void LocHalDaemonClientHandler::onLocationSystemInfoCb(LocationSystemInfo notifi
 
     if ((nullptr != mIpcSender) &&
             (mSubscriptionMask & E_LOC_CB_SYSTEM_INFO_BIT)) {
-        string pbStr;
-        LocAPILocationSystemInfoIndMsg msg(SERVICE_NAME, notification, &mService->mPbufMsgConv);
+
+        LocAPILocationSystemInfoIndMsg msg(SERVICE_NAME, notification);
         LOC_LOGv("Sending location system info message");
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPILocationSystemInfoIndMsg serializeToProtobuf failed");
+        bool rc = sendMessage(msg);
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }
@@ -1057,20 +982,17 @@ LocHalDaemonClientHandler - Engine info related functionality
 // as well
 void LocHalDaemonClientHandler::onGnssEnergyConsumedInfoAvailable(
    LocAPIGnssEnergyConsumedIndMsg &msg) {
+
    if ((nullptr != mIpcSender) &&
             (mEngineInfoRequestMask & E_ENGINE_INFO_CB_GNSS_ENERGY_CONSUMED_BIT)) {
-        string pbStr;
-        if (msg.serializeToProtobuf(pbStr)) {
-            bool rc = sendMessage(pbStr.c_str(), pbStr.size(), msg.msgId);
-            mEngineInfoRequestMask &= ~E_ENGINE_INFO_CB_GNSS_ENERGY_CONSUMED_BIT;
 
-            // purge this client if failed
-            if (!rc) {
-                LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
-                mService->deleteClientbyName(mName);
-            }
-        } else {
-            LOC_LOGe("LocAPIGnssEnergyConsumedIndMsg serializeToProtobuf failed");
+        bool rc = sendMessage(msg);
+        mEngineInfoRequestMask &= ~E_ENGINE_INFO_CB_GNSS_ENERGY_CONSUMED_BIT;
+
+        // purge this client if failed
+        if (!rc) {
+            LOC_LOGe("failed rc=%d purging client=%s", rc, mName.c_str());
+            mService->deleteClientbyName(mName);
         }
     }
 }

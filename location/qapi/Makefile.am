@@ -45,4 +45,5 @@ lib_LTLIBRARIES = liblocation_qapi.la
 library_includedir = $(pkgincludedir)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = location-qapi.pc
+sysconf_DATA = $(WORKSPACE)/gps/etc/qapi.conf
 EXTRA_DIST = $(pkgconfig_DATA)

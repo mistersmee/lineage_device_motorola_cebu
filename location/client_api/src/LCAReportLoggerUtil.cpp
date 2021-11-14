@@ -46,10 +46,9 @@ LCAReportLoggerUtil::LCAReportLoggerUtil():
             libHandle, libname, "LogGnssMeas");
 }
 
-void LCAReportLoggerUtil::log(const GnssLocation& gnssLocation,
-            const LocationCapabilitiesMask& capMask) {
+void LCAReportLoggerUtil::log(const GnssLocation& gnssLocation) {
     if (mLogLocation != nullptr) {
-        mLogLocation(gnssLocation, capMask);
+        mLogLocation(gnssLocation);
     }
 }
 

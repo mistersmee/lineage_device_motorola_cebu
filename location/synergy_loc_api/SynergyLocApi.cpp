@@ -751,16 +751,6 @@ void handleSllReportGnssAdditionalSystemInfo(GnssAdditionalSystemInfo& additiona
     }
 }
 
-void handleSllRequestEedGpsData(void *context) {
-   (void *)(context);
-   LOC_LOGw ("Default Implementation");
-}
-
-void handleSllRequestEedGloData(void *context) {
-   (void *)(context);
-   LOC_LOGw ("Default Implementation");
-}
-
 /* Init SLL Event Callbacks */
 const SllInterfaceEvent sllEventCb = {
     handleSllEngineUp,
@@ -790,9 +780,7 @@ const SllInterfaceEvent sllEventCb = {
     handleSllReportGnssEngEnergyConsumedEvent,
     handleSllReportDeleteAidingDataEvent,
     handleSllReportKlobucharIonoModel,
-    handleSllReportGnssAdditionalSystemInfo,
-    handleSllRequestEedGpsData,
-    handleSllRequestEedGloData
+    handleSllReportGnssAdditionalSystemInfo
 };
 
 /**
@@ -1169,15 +1157,6 @@ enum loc_api_adapter_err defaultsllResetConstellationControl(void *context) {
     SLL_DEFAULT_IMPL();
 }
 
-/**
-    Default Implantation of request XTRA configuration Info;
-    to indicate the command is not supported.
-*/
-enum loc_api_adapter_err defaultsllRequestXtraConfigInfo(const uint32_t configMask,
-                                         const uint32_t configReqSource, void *context) {
-    SLL_DEFAULT_IMPL();
-}
-
 /* Default Implantation of SLL Commands */
 const SllInterfaceReq sllDefultReq = {
     defaultSllOpen,
@@ -1220,8 +1199,7 @@ const SllInterfaceReq sllDefultReq = {
     defaultsllGetBlacklistSv,
     defaultsllSetConstellationControl,
     defaultsllGetConstellationControl,
-    defaultsllResetConstellationControl,
-    defaultsllRequestXtraConfigInfo
+    defaultsllResetConstellationControl
 };
 
 /* Constructor for SynergyLocApi */

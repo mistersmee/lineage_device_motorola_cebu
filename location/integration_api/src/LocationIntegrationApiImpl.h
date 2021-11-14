@@ -37,7 +37,6 @@
 #include <LocationIntegrationApi.h>
 #include <MsgTask.h>
 #include <LocationApiMsg.h>
-#include <LocationApiPbMsgConv.h>
 
 #ifdef NO_UNORDERED_SET_OR_MAP
     #include <map>
@@ -52,7 +51,6 @@ using namespace location_integration;
 namespace location_integration
 {
 typedef std::unordered_map<LocConfigTypeEnum, int32_t> LocConfigReqCntMap;
-typedef std::unordered_map<PositioningEngineMask, LocEngineRunState> LocConfigEngRunStateMap;
 
 typedef struct {
     bool     isValid;
@@ -83,11 +81,6 @@ typedef struct {
     bool isValid;
     ::DeadReckoningEngineConfig dreConfig;
 } DeadReckoningEngineConfigInfo;
-
-typedef struct {
-    bool isValid;
-    bool userConsent;
-} GtpUserConsentConfigInfo;
 
 class IpcListener;
 
@@ -129,10 +122,6 @@ public:
 
     uint32_t getConstellationSecondaryBandConfig();
 
-    uint32_t configEngineRunState(PositioningEngineMask engType, LocEngineRunState engState);
-
-    uint32_t setUserConsentForTerrestrialPositioning(bool userConsent);
-
 private:
     ~LocationIntegrationApiImpl();
     bool integrationClientAllowed();
@@ -153,9 +142,6 @@ private:
     void processGetConstellationSecondaryBandConfigRespCb(
             const LocConfigGetConstellationSecondaryBandConfigRespMsg* pRespMsg);
 
-    // protobuf conversion util class
-    LocationApiPbMsgConv mPbufMsgConv;
-
     // internal session parameter
     static mutex             mMutex;
     static bool              mClientRunning; // allow singleton int client
@@ -174,8 +160,6 @@ private:
     LeverArmConfigInfo       mLeverArmConfigInfo;
     RobustLocationConfigInfo mRobustLocationConfigInfo;
     DeadReckoningEngineConfigInfo mDreConfigInfo;
-    LocConfigEngRunStateMap       mEngRunStateConfigMap;
-    GtpUserConsentConfigInfo      mGtpUserConsentConfigInfo;
 
     LocConfigReqCntMap       mConfigReqCntMap;
     LocIntegrationCbs        mIntegrationCbs;

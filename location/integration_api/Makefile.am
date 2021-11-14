@@ -3,16 +3,13 @@ AM_CFLAGS = \
     -I src/ \
     -I inc/ \
     $(GPSUTILS_CFLAGS) \
-    $(LOCAPIMSGPROTO_CFLAGS) \
     -std=c++11
 
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -std=c++11
 
 requiredlibs = \
-    $(GPSUTILS_LIBS) \
-    $(LOCAPIMSGPROTO_LIBS) \
-    -lprotobuf
+    $(GPSUTILS_LIBS)
 
 h_sources = \
     src/LocationIntegrationApiImpl.h \

@@ -12,7 +12,6 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -std=c++11
 
 requiredlibs = \
-    $(GPSUTILS_LIBS) \
     $(LOCCLIENTAPI_LIBS) \
     $(LOCINTEGRATIONAPI_LIBS)
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, 2020-2021 The Linux Foundation. All rights reserved.
+/* Copyright (c) 2017, 2020 The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -158,7 +158,6 @@ uint32_t LocationAPIControlClient::locAPIGnssUpdateConfig(GnssConfig config)
                 }
                 mRequestQueues[CTRL_REQUEST_CONFIG_UPDATE].push(new GnssUpdateConfigRequest(*this));
                 retVal = LOCATION_ERROR_SUCCESS;
-                delete [] idArray;
             }
         }
     }
@@ -181,7 +180,6 @@ uint32_t LocationAPIControlClient::locAPIGnssGetConfig(GnssConfigFlagsMask mask)
             }
             mRequestQueues[CTRL_REQUEST_CONFIG_GET].push(new GnssGetConfigRequest(*this));
             retVal = LOCATION_ERROR_SUCCESS;
-            delete [] idArray;
         }
     }
     pthread_mutex_unlock(&mMutex);
@@ -399,11 +397,12 @@ void LocationAPIClientBase::locAPIUpdateTrackingOptions(TrackingOptions& options
     if (mLocationAPI) {
         uint32_t session = 0;
         session = mRequestQueues[REQUEST_TRACKING].getSession();
-        if (session > 0) {
+        // Not allowing to update the tracking options for stopped session
+        if (session > 0 && mTracking) {
             mRequestQueues[REQUEST_TRACKING].push(new UpdateTrackingOptionsRequest(*this));
             mLocationAPI->updateTrackingOptions(session, options);
         } else {
-            LOC_LOGE("%s:%d] invalid session: %d.", __FUNCTION__, __LINE__, session);
+            LOC_LOGe("invalid or stopped session: %d.", session);
         }
     }
     pthread_mutex_unlock(&mMutex);
@@ -634,7 +633,7 @@ uint32_t LocationAPIClientBase::locAPIGetBatchedLocations(uint32_t id, size_t co
             }
         }  else {
             retVal = LOCATION_ERROR_ID_UNKNOWN;
-            LOC_LOGd("unknown session id: %d, might flush() a stopped session",  id);
+            LOC_LOGE("%s:%d] invalid session: %d.", __FUNCTION__, __LINE__, id);
         }
     }
     pthread_mutex_unlock(&mMutex);
