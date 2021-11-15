@@ -658,6 +658,16 @@
         <fqname>@1.0::IWifiStats/wifiStats</fqname>
     </hal>
     <hal format="hidl">
+        <name>vendor.qti.hardware.wigig.netperftuner</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>INetPerfTuner</name>
+            <instance>default</instance>
+        </interface>
+        <fqname>@1.0::INetPerfTuner/default</fqname>
+    </hal>
+    <hal format="hidl">
         <name>vendor.qti.ims.callinfo</name>
         <transport>hwbinder</transport>
         <version>1.0</version>
@@ -701,7 +711,7 @@
         </interface>
         <fqname>@1.0::IQspmhal/default</fqname>
     </hal>
-    <sepolicy>
+        <sepolicy>
         <version>30.0</version>
     </sepolicy>
 </manifest>
