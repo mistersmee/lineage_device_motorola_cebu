@@ -70,6 +70,37 @@ TARGET_KERNEL_CLANG_COMPILE := true
 TARGET_KERNEL_CONFIG := lineageos_cebu_defconfig
 TARGET_KERNEL_VERSION := 4.19
 
+# Kernel modules - Audio
+TARGET_MODULE_ALIASES += \
+ adsp_loader_dlkm.ko:audio_adsp_loader.ko \
+ apr_dlkm.ko:audio_apr.ko \
+ aw882xx_dlkm.ko:audio_snd_soc_aw882xx.ko \
+ bolero_cdc_dlkm.ko:audio_bolero_cdc.ko \
+ machine_dlkm.ko:audio_machine_bengal.ko \
+ mbhc_dlkm.ko:audio_mbhc.ko \
+ native_dlkm.ko:audio_native.ko \
+ pinctrl_lpi_dlkm.ko:audio_pinctrl_lpi.ko \
+ platform_dlkm.ko:audio_platform.ko \
+ pm2250_spmi_dlkm.ko:audio_pm2250_spmi.ko \
+ q6_dlkm.ko:audio_q6.ko \
+ q6_notifier_dlkm.ko:audio_q6_notifier.ko \
+ q6_pdr_dlkm.ko:audio_q6_pdr.ko \
+ rouleur_dlkm.ko:audio_rouleur.ko \
+ rouleur_slave_dlkm.ko:audio_rouleur_slave.ko \
+ rx_macro_dlkm.ko:audio_rx_macro.ko \
+ snd_event_dlkm.ko:audio_snd_event.ko \
+ stub_dlkm.ko:audio_stub.ko \
+ swr_ctrl_dlkm.ko:audio_swr.ko \
+ swr_dlkm.ko:audio_swr_ctrl.ko \
+ tx_macro_dlkm.ko:audio_tx_macro.ko \
+ usf_dlkm.ko:audio_usf.ko \
+ va_macro_dlkm.ko:audio_va_macro.ko \
+ wcd937x_dlkm.ko:audio_wcd937x.ko \
+ wcd937x_slave_dlkm.ko:audio_wcd937x_slave.ko \
+ wcd9xxx_dlkm.ko:audio_wcd9xxx.ko \
+ wcd_core_dlkm.ko:audio_wcd_core.ko \
+ wsa881x_analog_dlkm.ko:audio_wsa881x_analog.ko
+
 # Kernel modules - WLAN
 TARGET_MODULE_ALIASES += \
     wlan.ko:qca_cld3_wlan.ko
