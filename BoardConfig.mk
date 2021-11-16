@@ -70,38 +70,6 @@ TARGET_KERNEL_CLANG_COMPILE := true
 TARGET_KERNEL_CONFIG := lineageos_cebu_defconfig
 TARGET_KERNEL_VERSION := 4.19
 
-# Kernel modules - Audio
-TARGET_MODULE_ALIASES += \
-    adsp_loader_dlkm.ko:audio_adsp_loader.ko \
-    apr_dlkm.ko:audio_apr.ko \
-    bolero_cdc_dlkm.ko:audio_bolero_cdc.ko \
-    hdmi_dlkm.ko:audio_hdmi.ko \
-    machine_dlkm.ko:audio_machine_bengal.ko \
-    mbhc_dlkm.ko:audio_mbhc.ko \
-    native_dlkm.ko:audio_native.ko \
-    pinctrl_lpi_dlkm.ko:audio_pinctrl_lpi.ko \
-    platform_dlkm.ko:audio_platform.ko \
-    q6_dlkm.ko:audio_q6.ko \
-    q6_notifier_dlkm.ko:audio_q6_notifier.ko \
-    q6_pdr_dlkm.ko:audio_q6_pdr.ko \
-    rx_macro_dlkm.ko:audio_rx_macro.ko \
-    snd_event_dlkm.ko:audio_snd_event.ko \
-    stub_dlkm.ko:audio_stub.ko \
-    swr_ctrl_dlkm.ko:audio_swr_ctrl.ko \
-    swr_dlkm.ko:audio_swr.ko \
-    tx_macro_dlkm.ko:audio_tx_macro.ko \
-    usf_dlkm.ko:audio_usf.ko \
-    va_macro_dlkm.ko:audio_va_macro.ko \
-    wcd937x_dlkm.ko:audio_wcd937x.ko \
-    wcd937x_slave_dlkm.ko:audio_wcd937x_slave.ko \
-    wcd938x_dlkm.ko:audio_wcd938x.ko \
-    wcd938x_slave_dlkm.ko:audio_wcd938x_slave.ko \
-    wcd9xxx_dlkm.ko:audio_wcd9xxx.ko \
-    wcd_core_dlkm.ko:audio_wcd_core.ko \
-    wsa881x_dlkm.ko:audio_wsa881x.ko \
-    wsa883x_dlkm.ko:audio_wsa883x.ko \
-    wsa_macro_dlkm.ko:audio_wsa_macro.ko
-
 # Kernel modules - WLAN
 TARGET_MODULE_ALIASES += \
     wlan.ko:qca_cld3_wlan.ko
@@ -196,20 +164,20 @@ BOARD_USES_METADATA_PARTITION := true
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
-ifneq ($(WITH_GMS),true)
 BOARD_PRODUCTIMAGE_EXTFS_INODE_COUNT := -1
-BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE := 805306368 # 768 Mb
+BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE := 2268930048
 BOARD_SYSTEMIMAGE_EXTFS_INODE_COUNT := -1
-BOARD_SYSTEMIMAGE_PARTITION_RESERVED_SIZE := 1342177280 # 1280 Mb
-endif
+BOARD_SYSTEMIMAGE_PARTITION_RESERVED_SIZE := 1391116288
+BOARD_VENDORIMAGE_EXTFS_INODE_COUNT := -1
+BOARD_VENDORIMAGE_PARTITION_RESERVED_SIZE := 731521024
 BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_MOTOROLA_DYNAMIC_PARTITIONS_PARTITION_LIST := product system vendor
-BOARD_MOTOROLA_DYNAMIC_PARTITIONS_SIZE := 5364514816    # 5116 Mb
+BOARD_MOTOROLA_DYNAMIC_PARTITIONS_SIZE := 4877451264
 BOARD_SUPER_PARTITION_GROUPS := motorola_dynamic_partitions
-BOARD_SUPER_PARTITION_SIZE := 10737418240               # 10240 Mb
-BOARD_SUPER_PARTITION_ERROR_LIMIT := 10200547328        # 9728 Mb
+BOARD_SUPER_PARTITION_SIZE := 9763291136
+BOARD_SUPER_PARTITION_ERROR_LIMIT := 9763287040
 BOARD_FLASH_BLOCK_SIZE := 262144 # (BOARD_KERNEL_PAGESIZE * 64)
 TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_VENDOR := vendor
