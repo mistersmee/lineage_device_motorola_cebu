@@ -161,6 +161,8 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     android.hardware.boot@1.1-qti \
     android.hardware.boot@1.1-impl-qti.recovery \
+    android.hardware.boot@1.1-service \
+    bootctrl.bengal \
     bootctrl.bengal.recovery
 
 PRODUCT_PACKAGES_DEBUG += \
